@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    networks:
+      - uploodernet
+
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_DATABASE: admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+
+  postfix:
+    image: h0perium/postfix-dovecot-dkim
+    restart: always
+    ports:
+      - 25:25
+      - 587:587
+      - 993:993
+      - 995:995
+      - 143:143
+      - 110:110
+    volumes:
+      - mailserver-storage:/var/mail
+      - /etc/myconfigs/nginx/ssl/publickey.crt:/etc/ssl/certs/ssl-cert-snakeoil.pem
+      - /etc/myconfigs/nginx/ssl/privatekey.key:/etc/ssl/private/ssl-cert-snakeoil.key
+    networks:
+      - uploodernet
+
+    environment:
+      MTP_HOST: uplooder.net
+      INIT_EMAIL: info@uplooder.net
+      INIT_EMAIL_PASS: qwe123456
+      MTP_DESTINATION: '6a6a6586e71d, localhost.localdomain, localhost'
+
+
+
+  roundcube:
+    depends_on:
+      - db
+    image: h0perium/roundcube
+    networks:
+      - uploodernet
+    environment:
+      ROUNDCUBEMAIL_DEFAULT_HOST: "postfix"
+      ROUNDCUBEMAIL_SMTP_SERVER:  "postfix"
+      ROUNDCUBEMAIL_SMTP_PORT: 25
+      ROUNDCUBEMAIL_DB_TYPE: mysql
+      ROUNDCUBEMAIL_DB_HOST: db
+      ROUNDCUBEMAIL_DB_USER: admin
+      ROUNDCUBEMAIL_DB_PASSWORD: admin
+      ROUNDCUBEMAIL_DB_NAME: admin
+
+    ports:
+      - 6565:80
+    restart: always
+
+networks:
+  uploodernet:
+    external: true
+
+
+volumes:
+   mailserver-storage:

@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    networks:
+      - uploodernet
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_DATABASE: admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+
+  roundcube:
+    depends_on:
+      - db
+    image: h0perium/roundcube
+    networks:
+      - uploodernet 
+    environment:
+      ROUNDCUBEMAIL_DEFAULT_HOST: "postfix"
+      ROUNDCUBEMAIL_SMTP_SERVER: "postfix"
+      ROUNDCUBEMAIL_SMTP_PORT: 25
+      ROUNDCUBEMAIL_DB_TYPE: mysql
+      ROUNDCUBEMAIL_DB_HOST: db
+      ROUNDCUBEMAIL_DB_USER: admin
+      ROUNDCUBEMAIL_DB_PASSWORD: admin
+      ROUNDCUBEMAIL_DB_NAME: admin
+
+
+    ports:
+      - 6565:80
+    restart: always
+
+networks:
+  uploodernet:
+    external: true
